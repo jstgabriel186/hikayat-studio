@@ -10,11 +10,12 @@ export function err(message: string, status = 500) {
 
 /** Ambil field provider/model dari body request secara aman. */
 export function pickAiRequest(body: Record<string, unknown> | null): {
-  provider?: "anthropic" | "mock" | "auto" | null;
+  provider?: "anthropic" | "gemini" | "mock" | "auto" | null;
   model?: string | null;
 } {
   const provider = body?.provider as
     | "anthropic"
+    | "gemini"
     | "mock"
     | "auto"
     | null
@@ -24,9 +25,10 @@ export function pickAiRequest(body: Record<string, unknown> | null): {
       ? body.model.trim()
       : null;
   return {
-    provider: provider && ["anthropic", "mock", "auto"].includes(provider)
-      ? provider
-      : "auto",
+    provider:
+      provider && ["anthropic", "gemini", "mock", "auto"].includes(provider)
+        ? provider
+        : "auto",
     model,
   };
 }

@@ -20,7 +20,7 @@ import { getEnv } from "../env";
  * ================================================================
  */
 
-export type AiProviderId = "anthropic" | "mock";
+export type AiProviderId = "anthropic" | "gemini" | "mock";
 
 export type RequestedProvider =
   | AiProviderId
@@ -147,8 +147,31 @@ export async function createAiProvider(
     };
   }
 
-  // anthropic
-  if (env.anthropicApiKey) {
+  // gemini — GRATIS (free tier Google AI Studio)
+  if (want === "gemini") {
+    if (!env.geminiApiKey) {
+      throw new Error(
+        "Mode 'Gemini (gratis)' dipilih tetapi GEMINI_API_KEY belum diisi. Buat kunci gratis di https://aistudio.google.com/apikey lalu isi .env.local.",
+      );
+    }
+    const { GoogleGeminiProvider } = await import("./providers/gemini");
+    return {
+      provider: new GoogleGeminiProvider({
+        apiKey: env.geminiApiKey,
+        model: req.model ?? env.geminiModel,
+      }),
+      usedMock: false,
+      reason: "",
+    };
+  }
+
+  // anthropic (berbayar — hanya bila dipilih eksplisit & ada key)
+  if (want === "anthropic") {
+    if (!env.anthropicApiKey) {
+      throw new Error(
+        "Mode 'Anthropic' dipilih tetapi ANTHROPIC_API_KEY belum diisi. Tambahkan di .env.local atau pilih mode uji.",
+      );
+    }
     const { AnthropicProvider } = await import("./providers/anthropic");
     return {
       provider: new AnthropicProvider({
@@ -160,18 +183,36 @@ export async function createAiProvider(
     };
   }
 
-  // Tidak ada key & bukan paksaan anthropic? (auto) → mock agar app tetap bisa dicoba.
-  if (req.provider === "anthropic") {
-    throw new Error(
-      "Mode 'Anthropic' dipilih tetapi ANTHROPIC_API_KEY belum diisi. Tambahkan di .env.local atau pilih mode uji.",
-    );
+  // auto: Anthropic (bila ada key) → Gemini gratis → mock
+  if (env.anthropicApiKey) {
+    const { AnthropicProvider } = await import("./providers/anthropic");
+    return {
+      provider: new AnthropicProvider({
+        apiKey: env.anthropicApiKey,
+        model: req.model ?? env.anthropicModel,
+      }),
+      usedMock: false,
+      reason: "",
+    };
+  }
+  if (env.geminiApiKey) {
+    const { GoogleGeminiProvider } = await import("./providers/gemini");
+    return {
+      provider: new GoogleGeminiProvider({
+        apiKey: env.geminiApiKey,
+        model: req.model ?? env.geminiModel,
+      }),
+      usedMock: false,
+      reason: "",
+    };
   }
 
   const { MockProvider } = await import("./providers/mock");
   return {
     provider: new MockProvider(),
     usedMock: true,
-    reason: "ANTHROPIC_API_KEY kosong — fallback otomatis ke mode uji.",
+    reason:
+      "Belum ada kunci API — fallback otomatis ke mode uji (disarankan: Gemini gratis).",
   };
 }
 
