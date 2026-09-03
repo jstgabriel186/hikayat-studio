@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* ============================================================
+   HIKAYAT STUDIO — Tema "Arsip Sejarah"
+   bg #0D0B08 · surface #171310 · aksen emas #C9A227 · teks #EDE6D6
+   ============================================================ */
+
+:root {
+  --background: #0d0b08;
+  --foreground: #ede6d6;
+
+  --card: #171310;
+  --card-foreground: #ede6d6;
+
+  --popover: #1e1913;
+  --popover-foreground: #ede6d6;
+
+  --primary: #c9a227;
+  --primary-foreground: #171006;
+
+  --secondary: #261f14;
+  --secondary-foreground: #ede6d6;
+
+  --muted: #1c1710;
+  --muted-foreground: #a39472;
+
+  --accent: #2a2214;
+  --accent-foreground: #ead9a6;
+
+  --destructive: #b3402e;
+  --destructive-foreground: #fff6ec;
+
+  --border: #3a2e1a;
+  --input: #3a2e1a;
+  --ring: #c9a227;
+
+  --radius: 0.55rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-playfair);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+}
+
+/* Warna bantu "arsip" */
+@theme {
+  --color-gold: #c9a227;
+  --color-gold-soft: #e8d9ae;
+  --color-gold-faint: #8a7420;
+  --color-ink: #0d0b08;
+  --color-surface: #171310;
+  --color-parchment: #ede6d6;
+  --color-ember: #b3402e;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(201, 162, 39, 0.35);
+  color: #fff;
+}
+
+/* Scrollbar tipis bertema gelap */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a2e1a transparent;
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #3a2e1a;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tekstur butiran kertas arsip (data-uri kecil, offline friendly) */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Bingkai "catatan arsip": garis emas tipis + sudut */
+.archival-card {
+  border: 1px solid color-mix(in srgb, #c9a227 22%, transparent);
+  box-shadow:
+    0 1px 0 rgba(201, 162, 39, 0.08) inset,
+    0 14px 40px -24px rgba(0, 0, 0, 0.9);
+}
+
+/* Judul dengan garis emas di bawah */
+.title-rule {
+  position: relative;
+}
+.title-rule::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.35rem;
+  height: 1px;
+  width: 3.2rem;
+  background: linear-gradient(90deg, #c9a227, transparent);
+}
+
+@keyframes hikayat-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-hikayat-pulse {
+  animation: hikayat-pulse 1.4s ease-in-out infinite;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
