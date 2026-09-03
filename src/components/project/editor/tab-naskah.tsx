@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Check, RefreshCw, Sparkles } from "lucide-react";
 import { cn, fmtClock } from "@/lib/utils";
-import { CopyButton } from "@/components/app/copy-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +12,7 @@ import { beatMeta } from "./beat";
 import type { SceneC } from "./types";
 
 function HookSection() {
-  const { p, setHook, busy } = useEditor();
+  const { p, setHook } = useEditor();
   const script = p.script;
   if (!script) return null;
   const variants = script.hookVariants;
@@ -128,10 +127,17 @@ function SceneCardEditor({ scene }: { scene: SceneC }) {
   const regenBusy = busy[`regen-narration-${scene.id}`];
   const saveBusy = busy[`scene-${scene.id}`];
 
-  React.useEffect(() => {
+  // sinkron ulang saat data server berubah (mis. hasil "Tulis ulang"/muat ulang),
+  // tanpa menimpa ketikan yang belum disimpan — pola "adjust state in render"
+  const [committedKey, setCommittedKey] = React.useState(
+    `${scene.narration}|${scene.durationSec}`,
+  );
+  const sceneKey = `${scene.narration}|${scene.durationSec}`;
+  if (committedKey !== sceneKey) {
+    setCommittedKey(sceneKey);
     setNarasi(scene.narration);
     setDur(String(scene.durationSec));
-  }, [scene.narration, scene.durationSec]);
+  }
 
   const onBlurNarasi = () => {
     const t = narasi.trim();

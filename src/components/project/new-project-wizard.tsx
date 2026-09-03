@@ -172,7 +172,7 @@ export function NewProjectWizard() {
     setErrorMsg(null);
     setPhase("processing");
     // reset status tahapan dari startIdx
-    setStage((s) => {
+    setStage(() => {
       const next = { ...DEFAULT_STATE };
       stepKeys.forEach((st, i) => {
         next[st.id] = i < startIdx ? "done" : "idle";

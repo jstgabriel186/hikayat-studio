@@ -15,7 +15,6 @@ import {
   Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { fmtDateTime, fmtClock } from "@/lib/utils";
 import { statusMeta } from "@/lib/status";
 import { getPresetLabel } from "@/lib/presets";
@@ -25,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PipelineTimeline, type PipelineState, type StepStatus } from "@/components/project/pipeline-timeline";
+import { PipelineTimeline, type PipelineState } from "@/components/project/pipeline-timeline";
 import { AiModePill } from "@/components/app/ai-mode-pill";
 import { EditorProvider, useEditor, type BusyMap } from "./editor-context";
 import { NaskahTab } from "./tab-naskah";
@@ -69,8 +68,12 @@ function TitleEditor() {
   const { p, rename } = useEditor();
   const [editing, setEditing] = React.useState(false);
   const [title, setTitle] = React.useState(p.title);
-
-  React.useEffect(() => setTitle(p.title), [p.title]);
+  // ikuti perubahan judul dari server (rename selesai / muat ulang)
+  const [prevTitle, setPrevTitle] = React.useState(p.title);
+  if (prevTitle !== p.title) {
+    setPrevTitle(p.title);
+    setTitle(p.title);
+  }
 
   const save = async () => {
     setEditing(false);
