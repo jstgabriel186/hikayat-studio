@@ -11,7 +11,7 @@ import { createAiProvider } from "@/lib/ai/provider";
 import { getPreset } from "@/lib/presets";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // 60 dtk = batas Vercel Hobby; abaikan di Render/lokal
 
 /**
  * Regenerate SATU scene:

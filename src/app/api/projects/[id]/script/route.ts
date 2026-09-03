@@ -4,7 +4,7 @@ import { err, ok, pickAiRequest, jsonErrorToMessage } from "@/lib/http";
 import { runScriptStage, PipelineError, requireProject, refreshDetail } from "@/lib/pipeline";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // 60 dtk = batas Vercel Hobby; abaikan di Render/lokal
 
 /** Tahap [B] Naskah — dari transkrip + preset + durasi. */
 export async function POST(

@@ -3,7 +3,7 @@ import { err, ok, pickAiRequest, jsonErrorToMessage } from "@/lib/http";
 import { runSceneMediaStage, PipelineError } from "@/lib/pipeline";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // 60 dtk = batas Vercel Hobby; abaikan di Render/lokal
 
 /** Tahap [C] Scene Cards — media utk semua scene. */
 export async function POST(

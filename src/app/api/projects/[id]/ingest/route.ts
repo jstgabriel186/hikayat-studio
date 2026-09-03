@@ -5,7 +5,7 @@ import { requireProject, refreshDetail } from "@/lib/pipeline";
 import { ingestYoutubeUrl, ensureStorage, isYoutubeUrl } from "@/lib/transcript";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // 60 dtk = batas Vercel Hobby; abaikan di Render/lokal
 
 /**
  * Tahap [A] INGEST — unduh transkrip + metadata dari URL YouTube.

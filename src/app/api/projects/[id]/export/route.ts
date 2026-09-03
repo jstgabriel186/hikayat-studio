@@ -5,7 +5,7 @@ import { buildExportZip } from "@/lib/export";
 import { requireProject, PipelineError } from "@/lib/pipeline";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // 60 dtk = batas Vercel Hobby; abaikan di Render/lokal
 
 /**
  * Export ZIP 1-klik. Param query:

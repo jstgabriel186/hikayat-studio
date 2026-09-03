@@ -4,7 +4,7 @@ import { requireProject, PipelineError } from "@/lib/pipeline";
 import { createAiProvider } from "@/lib/ai/provider";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // 60 dtk = batas Vercel Hobby; abaikan di Render/lokal
 
 /**
  * Terjemahkan narasi per scene ke bahasa Inggris (dasar subtitle EN).
