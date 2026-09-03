@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🪶 Hikayat Studio
 
-## Getting Started
+**Ubah video YouTube asing menjadi paket produksi video sejarah Indonesia yang siap diedit di CapCut.**
 
-First, run the development server:
+Hikayat Studio *tidak membuat* video. Ia menyiapkan **semua bahan**:
+transkrip diambil → ditulis ulang sebagai **naskah voiceover Indonesia yang orisinal** → tiap adegan diberi **scene card** (keywords b-roll, SFX, mood musik, prompt AI image, saran arsip) → **SEO pack** (judul, deskripsi, chapters, hashtag, tags, thumbnail) → **subtitle SRT** → semuanya diexport sebagai **satu ZIP**. Editing dan perakitan tetap di CapCut.
+
+---
+
+## ✨ Fitur (MVP — Phase 1)
+
+| Halaman | Isi |
+|---|---|
+| `/` | Dashboard daftar proyek (status, kemajuan pipeline, gaya, durasi) |
+| `/project/new` | Input **link YouTube** ATAU **paste teks artikel**; pilih preset gaya; slider durasi 5–20 menit; jalankan pipeline **Ingest → Naskah → Scene Cards → SEO** dengan timeline progres |
+| `/project/[id]` | Editor 5 tab: **Naskah** (10 varian hook pilihan + scene editable + tulis ulang per scene), **Scene Cards** (keywords/SFX/musik/prompt + copy + regenerate per scene), **SEO** (klik = pilih judul), **Subtitle** (preview SRT + unduh `.srt` ID & EN), **Export** (checklist + ZIP 1-klik) |
+
+Setiap field output punya tombol **Salin** — kebutuhan utama one-person studio.
+Antarmuka berbahasa Indonesia, tema gelap *arsip sejarah* (emas `#C9A227`, kertas `#EDE6D6`).
+
+## 💸 Seratus persen gratis
+
+Aplikasi berjalan **tanpa biaya sedikit pun**:
+
+1. **Transcript YouTube** — gratis via subtitle resmi video.
+2. **AI sungguhan tanpa modal** — pasang kunci **Gemini gratis** (Google AI Studio, tanpa kartu kredit):
+   - Buka <https://aistudio.google.com/apikey> → *Create API key* (gratis).
+   - Isi `GEMINI_API_KEY` di `.env.local` → aplikasi otomatis memakai `gemini-2.5-flash` (free tier).
+3. **Tanpa kunci apa pun?** Aplikasi otomatis turun ke **Mode Uji** (output contoh, tanpa jaringan) — seluruh alur tetap bisa dicoba. Pil status di pojok editor memberi tahu mode aktif.
+4. Anthropic (`claude-sonnet-4-5`) & Whisper hanya **opsional** bagi yang punya kunci berbayar.
+
+## 🚀 Menjalankan lokal (cara paling disarankan)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env        # database SQLite
+cp .env.example .env.local  # isi GEMINI_API_KEY bila mau AI sungguhan
+npm run db:push             # buat database lokal
+npm run dev                 # buka http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Panduan cepat setelah jalan: **Proyek Baru → tempel link YouTube (atau teks) → Mulai Pipeline → sunting → Export ZIP**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔌 Variabel lingkungan
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variabel | Wajib? | Keterangan |
+|---|---|---|
+| `DATABASE_URL` | Ya | `file:./dev.db` (SQLite). Postgres: `postgresql://…` + ganti provider di schema |
+| `GEMINI_API_KEY` | Opsional | Kunci **gratis** Google AI Studio → AI sungguhan |
+| `GEMINI_MODEL` | Opsional | Default `gemini-2.5-flash` |
+| `ANTHROPIC_API_KEY` | Opsional | Claude (berbayar), per spesifikasi produk |
+| `OPENAI_API_KEY` | Opsional | Fallback Whisper utk video tanpa subtitle |
+| `AI_PROVIDER` | Opsional | `auto` (default) · `gemini` · `anthropic` · `mock` |
 
-## Learn More
+Tidak ada kunci yang ditulis di kode. Semua lewat `.env` / `.env.local` (lihat `.env.example`).
 
-To learn more about Next.js, take a look at the following resources:
+## 🗂 Struktur penting
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+hikayat-studio/
+├── prompts/                 ← SYSTEM PROMPT AI (markdown, bisa diedit user biasa)
+│   ├── naskah-engine.md       [B] naskah VO orisinal
+│   ├── scene-card.md          [C] rencana visual & audio per adegan
+│   └── seo-pack.md            [D] SEO lengkap YouTube
+├── prisma/schema.prisma     ← data model (SQLite; kompatibel PostgreSQL)
+├── src/lib/
+│   ├── ai/provider.ts         abstraction AI (tukar provider tanpa sentuh pipeline)
+│   ├── ai/providers/          anthropic.ts · gemini.ts · mock.ts
+│   ├── ai/schemas.ts          skema zod utk semua output LLM
+│   ├── transcript.ts          ingest YouTube subtitle → fallback Whisper
+│   ├── pipeline.ts            tahap B→C→D (idempotent)
+│   ├── srt.ts                 generator SRT (ditulis sendiri)
+│   └── export.ts              perakit ZIP (7 berkas)
+├── src/app/api/…             REST: projects, stages, regenerate, subtitle EN, export
+└── src/components/…          UI (Tailwind + shadcn-style, tema gelap arsip)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Isi ZIP export
 
-## Deploy on Vercel
+```
+hikayat-{slug}/
+├── 00-NASKAH.md          hook + semua scene + catatan VO & open loop
+├── 01-subtitle-id.srt    subtitle Indonesia
+├── 02-subtitle-en.srt    terjemahan Inggris
+├── 03-cue-sheet.csv      scene, durasi, keywords, SFX, musik, transisi
+├── 04-prompts-gambar.txt semua prompt AI image (bernomor scene)
+├── 05-SEO-PACK.txt       judul terpilih + opsi, deskripsi, chapters, hashtag, tags, thumbnail
+└── scenes.json           data mentah (utk pengembangan Phase 2)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📚 Roadmap (belum diimplementasikan)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Phase 2** — Voiceover ElevenLabs (auto-SSML dari `catatan_vo`), auto-search stock Pexels, fact-check engine, originality score.
+- **Phase 3** — Style DNA lock, AI image generation, repurposing Shorts, kalender sejarah Indonesia, import CSV YouTube Studio, prompt versioning di `prompts/versions/`.
+
+Struktur folder & skema DB sudah dirancang agar mudah diperluas ke sana (mis. model `Asset`, interface provider, loader prompt).
+
+---
+
+## 🌐 GitHub & akses dari mana saja
+
+### 1. Push ke GitHub (kode aman di cloud + riwayat commit)
+
+Repo ini sudah bersih (tidak ada kunci/`.env`/database ter-commit). Untuk push ke repo milikmu:
+
+1. Buat repo baru di GitHub: <https://github.com/new> → nama mis. `hikayat-studio` → **jangan centang** "Add a README" (sudah ada).
+2. Di terminal proyek:
+
+```bash
+git remote add origin https://github.com/USERNAME/hikayat-studio.git
+git branch -M main
+git push -u origin main
+```
+
+*(Ganti `USERNAME`. GitHub akan minta autentikasi — pakai *Personal Access Token* bila perlu: GitHub → Settings → Developer settings → Tokens → `repo` scope.)*
+
+### 2. "Website tinggal pakai" — pilihan gratis
+
+**Paling sederhana (disarankan): jalankan di komputermu.**
+```bash
+npm run dev          # buka di http://localhost:3000
+npm run dev -- -H 0.0.0.0   # biar bisa diakses perangkat lain di jaringanmu
+```
+Mau akses dari luar tanpa deploy? Pasang [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) gratis:
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+→ dapat URL publik `https://xxx.trycloudflare.com` yang bisa dibuka siapa saja.
+
+**Deploy online (gratis tapi ada syarat):** Hikayat memakai SQLite lokal, membaca folder `prompts/`, dan memanggil AI yang bisa berjalan 30–90 detik. Penyedia *serverless gratis* (mis. Vercel Hobby) punya batas waktu eksekusi & storage non-persisten, jadi untuk go-online yang andal lakukan ini:
+
+- Ganti DB ke PostgreSQL **gratis** ([Neon](https://neon.tech) / [Supabase](https://supabase.com)):
+  - di `prisma/schema.prisma`: `provider = "sqlite"` → `"postgresql"`
+  - di env: `DATABASE_URL="postgresql://…"`
+  - jalankan `npm run db:migrate`
+- Atur `GEMINI_API_KEY` di panel hosting.
+- Pastikan folder `prompts/` ikut terbawa (di Vercel tambahkan `outputFileTracingIncludes`/publickan berkas prompt ke dalam bundle bila perlu).
+- Cek batas waktu function hosting ≥ 120 detik untuk tahap pipeline.
+
+Bila butuh bantuan deploy lebih lanjut (Railway/Render/self-host), tinggal tanya.
+
+---
+
+Dibangun dengan **Next.js 16 · TypeScript · Tailwind CSS · shadcn/ui · Prisma · Anthropic SDK · youtube-transcript · JSZip**. Model AI: `claude-sonnet-4-5` (opsional) dan `gemini-2.5-flash` (gratis).
