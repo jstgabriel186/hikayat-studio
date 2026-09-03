@@ -126,18 +126,23 @@ Mau akses dari luar tanpa deploy? Pasang [Cloudflare Tunnel](https://developers.
 cloudflared tunnel --url http://localhost:3000
 ```
 → dapat URL publik `https://xxx.trycloudflare.com` yang bisa dibuka siapa saja.
+(Butuh komputermu tetap menyala.)
 
-**Deploy online (gratis tapi ada syarat):** Hikayat memakai SQLite lokal, membaca folder `prompts/`, dan memanggil AI yang bisa berjalan 30–90 detik. Penyedia *serverless gratis* (mis. Vercel Hobby) punya batas waktu eksekusi & storage non-persisten, jadi untuk go-online yang andal lakukan ini:
+### ⭐ Cara "website tinggal pakai" — gratis, rekomendasi utama
 
-- Ganti DB ke PostgreSQL **gratis** ([Neon](https://neon.tech) / [Supabase](https://supabase.com)):
-  - di `prisma/schema.prisma`: `provider = "sqlite"` → `"postgresql"`
-  - di env: `DATABASE_URL="postgresql://…"`
-  - jalankan `npm run db:migrate`
-- Atur `GEMINI_API_KEY` di panel hosting.
-- Pastikan folder `prompts/` ikut terbawa (di Vercel tambahkan `outputFileTracingIncludes`/publickan berkas prompt ke dalam bundle bila perlu).
-- Cek batas waktu function hosting ≥ 120 detik untuk tahap pipeline.
+Deploy ke **Render.com** (server Node selalu jalan, tanpa batas waktu per-permintaan — cocok utk panggilan AI 30–90 dtk) + **Neon** (PostgreSQL gratis, data tersimpan permanen). Total ±15 menit, mayoritas tinggal klik. Semua berkas sudah siap di repo (`render.yaml`, `prisma/schema.pg.prisma`, `/api/health`).
 
-Bila butuh bantuan deploy lebih lanjut (Railway/Render/self-host), tinggal tanya.
+1. **Neon** — buat DB gratis: <https://neon.tech> → *New project* (region Singapore) → salin **connection string** `postgresql://…?sslmode=require`.
+2. **Gemini** — kunci gratis: <https://aistudio.google.com/apikey>.
+3. **Render** — daftar di <https://render.com> (tanpa kartu untuk free) → **New + Web Service** → **Build and deploy from a Git repository** → pilih `jstgabriel186/hikayat-studio`.
+   - Render membaca `render.yaml` otomatis (node 20, build + db push + start).
+   - Di tab **Environment**, tambahkan:
+     - `DATABASE_URL` = connection string Neon
+     - `GEMINI_API_KEY` = kunci Gemini
+   - Klik **Apply / Deploy**. Tunggu beberapa menit → buka URL `https://hikayat-studio.onrender.com`.
+4. Selesai — buka website, buat proyek, pakai. Free tier Render "tidur" setelah ±15 menit nganggur; kunjungan pertama bangun lagi (±10–50 dtk) — wajar utk free.
+
+> Catatan deploy: `render.yaml` menyalin `schema.pg.prisma` (provider PostgreSQL) ke `schema.prisma` saat build — model identik dgn versi SQLite lokal, jadi perubahan skema cukup dilakukan di `schema.prisma` lalu salin ke `schema.pg.prisma`. Penyedia serverless (Vercel Hobby) bisa dipakai juga, tetapi batas durasi function ~60 dtk berisiko utk tahap AI panjang.
 
 ---
 

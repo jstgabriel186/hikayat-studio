@@ -1,0 +1,116 @@
+// ============================================================
+// Hikayat Studio — SKEMA PRODUKSI (PostgreSQL) — dipakai saat deploy.
+// ------------------------------------------------------------
+// Berkas ini adalah salinan schema.prisma dengan hanya perbedaan:
+//   * datasource provider = "postgresql"
+//   * URL diambil dari env DATABASE_URL (mis. Neon PostgreSQL gratis)
+// Model di KEDUA berkas harus selalu identik (jaga saat mengubah schema.prisma).
+// Cara pakai di hosting: salin ke schema.prisma lalu jalankan prisma generate.
+// ============================================================
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------------
+// PROJECT — judul kerja + status pipeline + materi mentah
+// ------------------------------------------------------------------
+model Project {
+  id            String   @id @default(cuid())
+  title         String // judul kerja
+  sourceUrl     String? // link YouTube / sumber
+  sourceLang    String?
+  transcript    String? // teks mentah (subtitle / paste artikel)
+  status        String   @default("draft") // draft|transcribed|scripted|packaged|exported
+  stylePreset   String   @default("sinematik-misterius")
+  targetMinutes Float    @default(10)
+
+  // ---- metadata sumber & hasil unduhan video (diisi saat ingest) ----
+  sourceType    String   @default("url") // url|text|youtube|article — asal materi
+  videoTitle    String? // judul asli video sumber (dari metadata)
+  videoAuthor   String? // kanal / pengarang sumber
+  audioUrl      String? // fallback: berkas audio hasil unduh utk Whisper (disimpan di ./storage)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  script        Script?
+  seoPack       SeoPack?
+  assets        Asset[]
+}
+
+// ------------------------------------------------------------------
+// SCRIPT — hasil tahap [B] Naskah (per proyek, unik 1..1)
+// ------------------------------------------------------------------
+model Script {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // hook_variants (10 varian dari LLM) + hook terpilih + alasan
+  hookVariants String  @default("[]") // JSON array [{ teknik, teks }]
+  hookVariant  String // hook terpilih
+  hookReason   String @default("")
+  fullText     String @default("") // naskah final (gabungan scene)
+  targetWords  Int    @default(0) // target kata (dari durasi)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  scenes Scene[]
+}
+
+// ------------------------------------------------------------------
+// SCENE — satu adegan: narasi + kunci media (isi oleh tahap [C])
+// ------------------------------------------------------------------
+model Scene {
+  id         String  @id @default(cuid())
+  scriptId   String
+  script     Script  @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  order      Int
+  beat       String // hook|setup|konflik|klimaks|refleksi
+  narration  String
+  durationSec Int
+  openLoop   String?
+  voNote     String?
+  // ---- hasil tahap [C] Scene Cards (sebelum regenerate => "") ----
+  brollKeywords  String  @default("") // JSON array string
+  sfx            String  @default("") // JSON array
+  musicMood      String  @default("")
+  aiImagePrompt  String  @default("")
+  archiveSuggestion String?
+  transition     String  @default("cut") // cut|fade|match-cut
+  createdAt      DateTime @default(now())
+
+  @@index([scriptId, order])
+}
+
+// ------------------------------------------------------------------
+// SEO PACK — hasil tahap [D] (payload JSON lengkap)
+// ------------------------------------------------------------------
+model SeoPack {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  payload   String // JSON lengkap: judul opsi, deskripsi, chapters, hashtag, tags, thumbnail
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------------------
+// ASSET — katalog aset produksi tiap proyek (Persiapan Phase 2+)
+// ------------------------------------------------------------------
+model Asset {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      String // image|sfx|music|vo
+  ref       String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}

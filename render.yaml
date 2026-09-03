@@ -1,0 +1,34 @@
+# ============================================================
+# Hikayat Studio — Blueprint deploy gratis (Render.com)
+# ------------------------------------------------------------
+# Cara pakai: di dashboard Render → "New + Web Service" →
+#   "Build and deploy from a Git repository" → pilih repo ini.
+# Render otomatis membaca file ini.
+# ============================================================
+
+services:
+  - type: web
+    name: hikayat-studio
+    runtime: node
+    plan: free               # 0 Rupiah — 750 jam/bulan, tidur saat nganggur
+    region: singapore        # dekat Indonesia → respons lebih cepat
+    buildCommand: |
+      cp prisma/schema.pg.prisma prisma/schema.prisma && \
+      npm ci && \
+      npx prisma generate && \
+      npx prisma db push && \
+      npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: AI_PROVIDER
+        value: auto
+      # Isi manual di dashboard (tab Environment) — JANGAN simpan di repo:
+      - key: DATABASE_URL
+        sync: false          # contoh: postgresql://user:pass@host/db?sslmode=require (dari Neon)
+      - key: GEMINI_API_KEY
+        sync: false          # kunci GRATIS dari https://aistudio.google.com/apikey
